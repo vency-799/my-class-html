@@ -208,19 +208,14 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 }
 .week-empty-banner svg { width: 26px; height: 26px; opacity: .5; margin-bottom: 6px; }
 
-/* 周视图：每一天为一竖列（column），周一~周五 5 列横排；列内按时段从上到下 */
+/* 周视图：每一天为一块卡片，按屏幕宽度自动多列排布（手机 1~2 列，桌面 5 列横排），无横向滚动 */
 .week-view {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(168px, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
   gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  align-items: start;
   padding: 2px 2px 12px;
 }
-.week-view::-webkit-scrollbar { display: none; }
 .day-block {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -326,8 +321,7 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 /* ============ 桌面端（≥768px）：5 列等分铺满 ============ */
 @media (min-width: 768px) {
   .week-view {
-    grid-auto-columns: 1fr;
-    overflow-x: visible;
+    grid-template-columns: repeat(5, 1fr);
   }
   .day-body { gap: 10px; }
 }
@@ -764,7 +758,7 @@ window.SCHEDULE_DATA = {
     return wk === currentWeek;
   }
 
-  /* 横向滚动到今天所在列（仅当前周且已开学时） */
+  /* 将今天的卡片滚动到可视范围内（仅当前周且已开学时；周视图已改为多列网格，无需横向滚动） */
   function scrollToToday() {
     var now = new Date();
     var diffDays = Math.floor((now - TERM_START) / 86400000);
