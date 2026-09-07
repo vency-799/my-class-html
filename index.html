@@ -83,7 +83,7 @@ a { color: inherit; text-decoration: none; }
 }
 .header-inner {
   max-width: 1080px; margin: 0 auto;
-  padding: 12px 16px 8px;
+  padding: 8px 16px 2px;
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
 }
 .header-title {
@@ -95,53 +95,126 @@ a { color: inherit; text-decoration: none; }
 /* ============ 周选择器 ============ */
 .week-bar {
   max-width: 1080px; margin: 0 auto;
-  padding: 6px 16px 4px;
-  display: flex; align-items: center; gap: 8px;
+  padding: 2px 16px 8px;
+  display: flex; align-items: center; gap: 10px;
 }
-.week-arrow {
-  flex: 0 0 auto;
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 6px rgba(0, 0, 0, .05);
-  transition: transform .15s ease-out, background .2s, box-shadow .2s;
-}
-.week-arrow:active { transform: scale(.92); }
-.week-arrow:disabled { opacity: .35; cursor: default; }
-.week-arrow:disabled:active { transform: none; }
-.week-arrow svg { width: 18px; height: 18px; }
-.week-label {
+
+/* 周切换一体控件：上一周 | 第X周 · 日期（可点开周面板）| 下一周，
+   同一圆角表面内用发丝线分隔；高度与右侧“工作日/整周”分段控件一致 */
+.week-stepper {
   flex: 1 1 auto; min-width: 0;
-  height: 40px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  display: flex; align-items: stretch;
+  height: 30px;
+  border-radius: 9px;
   background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--text-base); font-weight: 700;
-  letter-spacing: .3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 8px rgba(0, 0, 0, .05);
-  transition: transform .15s ease-out, filter .2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 6px rgba(0, 0, 0, .06);
+  overflow: hidden;
 }
-.week-label:active { transform: scale(.97); }
-.week-label .week-dates {
-  font-size: var(--text-xs); font-weight: 500; opacity: .85;
+.ws-side {
+  flex: 0 0 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--color-text-secondary);
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s, color .15s, opacity .15s;
+}
+.ws-side:first-child { border-right: 1px solid var(--color-border); }
+.ws-side:last-child  { border-left: 1px solid var(--color-border); }
+.ws-side:active { background: rgba(0, 0, 0, .05); }
+.ws-side:disabled { opacity: .3; cursor: default; }
+.ws-side:disabled:active { background: transparent; }
+.ws-side svg { width: 16px; height: 16px; }
+.ws-main {
+  position: relative;
+  flex: 1 1 auto; min-width: 0;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+.ws-main:active { background: rgba(0, 0, 0, .03); }
+/* 三元素分别固定在 左 / 中 / 右，互不影响、不再随内容长度挤动 */
+.ws-main #weekLabelMain {
+  position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 56px; text-align: right;      /* 固定宽区右对齐 → 右边缘恒定 */
+  font-size: 13px; font-weight: 700; line-height: 1.2;
+  letter-spacing: .2px; white-space: nowrap;
+}
+.ws-main .week-dates {
+  position: absolute; left: 90px; top: 50%;       /* 68(标签右缘) + 22(恒定间隔) */
+  transform: translateY(-50%);
+  max-width: max(34px, calc(100% - 130px));   /* 预留右侧 ⇄ 图标区，并保证至少可见一段 */
+  overflow: hidden; white-space: nowrap; text-align: left;
+  font-size: 9.5px; font-weight: 500; line-height: 1.2;
+  color: var(--color-text-tertiary); opacity: .9;
   font-variant-numeric: tabular-nums;
 }
-.week-label .chevron { width: 14px; height: 14px; opacity: .7; transition: transform .25s ease-out; }
-.week-label.open .chevron { transform: rotate(180deg); }
+.ws-main .chevron {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 13px; height: 13px;
+  color: var(--color-text-tertiary);
+  opacity: .85;
+  transition: color .2s;
+}
+.ws-main.open .chevron { color: var(--color-primary); }
+
+/* 视图范围分段控件：iOS 风格，放在最右侧与主控件视觉区分 */
+.seg {
+  flex: 0 0 auto;
+  display: inline-flex;
+  background: var(--color-surface);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 6px rgba(0, 0, 0, .06);
+}
+.seg-btn {
+  border: 0; cursor: pointer; font-family: inherit;
+  height: 26px; padding: 0 13px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-xs); font-weight: 600;
+  color: var(--color-text-secondary);
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .18s, background .18s, box-shadow .18s;
+}
+.seg-btn:active { opacity: .7; }
+.seg-btn.active {
+  background: rgba(0, 122, 255, .12);
+  color: var(--color-primary);
+}
+@media (max-width: 400px) {
+  .seg-btn { padding: 0 10px; font-size: 11px; }
+}
+
+/* 窄屏（手机竖屏 PWA）：顶部栏整体收紧，把空间让给日期范围，保证完整显示不被裁剪
+   —— 各固定区之间仍保持恒定间隔（标签右缘 8+54=62，日期起点 70 → 间隔 8） */
+@media (max-width: 430px) {
+  .week-bar { padding: 2px 10px 8px; }
+  .ws-side { flex-basis: 30px; }
+  .ws-main #weekLabelMain { left: 8px; width: 54px; }
+  .ws-main .week-dates { left: 70px; max-width: max(30px, calc(100% - 100px)); }
+  .ws-main .chevron { right: 8px; }
+}
 
 /* 返回本周按钮：位于周选择面板顶部，远离箭头避免误触 */
 .week-today-btn {
-  width: 100%; height: 44px; border-radius: 14px;
-  font-size: var(--text-sm); font-weight: 600;
+  width: max-content; height: 34px; padding: 0 16px;
+  border-radius: 999px;
+  font-size: var(--text-xs); font-weight: 600;
   color: var(--color-text);
   background: var(--color-bg);
   display: none; align-items: center; justify-content: center; gap: 6px;
-  margin-bottom: 10px;
+  margin: 0 auto 10px;
   transition: transform .15s ease-out, background .2s;
 }
 .week-today-btn:active { transform: scale(.97); }
-.week-today-btn svg { width: 16px; height: 16px; }
+.week-today-btn svg { width: 14px; height: 14px; }
 .week-today-btn.visible { display: flex; }
 
 /* 周选择面板 */
@@ -182,9 +255,36 @@ a { color: inherit; text-decoration: none; }
 .week-pick-btn:focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: 2px;
 }
+.week-pick-btn { position: relative; }
+/* 右上角橙点 = 该周周末有安排（补课/周末课） */
+.week-pick-btn .wk-dot {
+  position: absolute; top: 4px; right: 5px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--color-warn);
+}
 
 /* ============ 主内容 ============ */
-main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
+main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
+
+/* 周末安排提示条：仅工作日视图下、本周周末仍有补课/课时显示 */
+.week-note {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 10px 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 159, 10, .12);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs); font-weight: 600;
+}
+.week-note svg { width: 15px; height: 15px; flex: 0 0 auto; color: var(--color-warn); }
+.week-note-act {
+  margin-left: auto; flex: 0 0 auto;
+  height: 26px; padding: 0 11px; border-radius: 999px;
+  color: #fff; background: var(--color-warn);
+  font-size: var(--text-xs); font-weight: 700;
+  transition: transform .12s ease-out, opacity .15s;
+}
+.week-note-act:active { transform: scale(.94); }
 
 .week-empty-banner {
   background: var(--color-surface);
@@ -198,8 +298,9 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 .week-empty-banner svg { width: 26px; height: 26px; opacity: .5; margin-bottom: 6px; }
 
 /* ============ 周视图：时间轴课表 ============ */
-/* 左侧为时间轴列，右侧周一~周五 5 列；表头一行 + 轨道一行，
+/* 左侧为时间轴列，右侧周一~周日 7 列；表头一行 + 轨道一行，
    课程按上课时段绝对定位，块高度 = 课时在一天中的占比 */
+/* 周六/周日目前无课，默认显示"无课"；数据里补上周末课程后会自动显示 */
 /* 结构：固定左栏（时间轴）+ 右侧可横向滚动的课表区 */
 .week-view {
   --track-h: 400px;
@@ -214,7 +315,7 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
   flex-direction: column;
 }
 
-/* 右侧可滚动区：仅装周一~周五的日期表头与轨道 */
+/* 右侧可滚动区：仅装周一~周日的日期表头与轨道 */
 .week-scroll {
   flex: 1 1 auto;
   min-width: 0;
@@ -223,13 +324,18 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 }
 .week-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: 40px var(--track-h);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: 60px var(--track-h);
   column-gap: 6px;
   row-gap: 0;
   align-items: stretch;
-  min-width: 475px;
+  min-width: 665px;
   padding: 0 2px 12px 0;
+}
+/* 仅工作日视图：5 列（周一~周五） */
+.week-grid.cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-width: 475px;
 }
 
 @media (max-width: 620px) {
@@ -238,17 +344,18 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 
 /* 左上角：时间轴表头（固定左栏顶部，与日期表头对齐） */
 .axis-head {
-  flex: 0 0 40px;
+  flex: 0 0 60px;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 600; color: var(--color-text-tertiary);
 }
 
-/* 日期表头（周一~周五） */
+/* 日期表头（周一~周日） */
 .day-head {
+  position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px;
-  height: 40px;
-  padding: 0 4px;
+  gap: 2px;
+  height: 60px;
+  padding: 2px 4px;
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -258,8 +365,21 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
   border-color: rgba(52, 199, 89, .55);
   background: linear-gradient(180deg, rgba(0, 122, 255, .07), var(--color-surface));
 }
-.day-name { font-size: 12px; font-weight: 700; color: var(--color-text); white-space: nowrap; }
-.day-date { font-size: 10px; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.day-name { font-size: 12px; font-weight: 700; line-height: 1.2; color: var(--color-text); white-space: nowrap; }
+.day-date { font-size: 10px; line-height: 1.2; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* 补课列标识：列头右上角一个"补"字小三角旗标（Apple 风格，避免多余胶囊/描边） */
+.mk-corner {
+  position: absolute; top: 0; right: 0;
+  width: 28px; height: 28px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: var(--color-warn);
+  color: #fff;
+  font-size: 9px; font-weight: 700; line-height: 1;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding: 3px 6px 0 0;
+  pointer-events: none; user-select: none;
+}
 
 /* 左侧时间轴（与轨道同高，刻度按时间百分比定位） */
 .time-axis {
@@ -285,6 +405,18 @@ main { padding: 12px 16px 40px; max-width: 1080px; margin: 0 auto; }
 .day-track.is-today {
   border-color: rgba(52, 199, 89, .55);
   box-shadow: inset 0 0 0 1px rgba(52, 199, 89, .25);
+}
+
+/* 空周末列弱化：极轻的灰面卡片 + 淡发丝边，安静不抢眼 */
+.day-head.weekend-muted .day-date { color: var(--color-text-tertiary); }
+.day-track.weekend-muted {
+  background: rgba(255, 255, 255, .55);
+  border-color: rgba(0, 0, 0, .05);
+}
+.day-track.weekend-muted .day-empty {
+  color: var(--color-text-tertiary);
+  opacity: .6;
+  font-weight: 500;
 }
 
 /* 课程块：按 top%/height% 定位，高度对应课时占比 */
@@ -390,19 +522,25 @@ details[open] .note-summary .chevron { transform: rotate(180deg); }
       <span class="header-sub" id="headerSub"></span>
     </div>
 
-    <!-- 周选择器 -->
+    <!-- 周切换一体控件（上一周 | 第X周·日期 | 下一周）+ 视图范围分段（同一行，分段靠右） -->
     <div class="week-bar">
-      <button class="week-arrow" id="prevWeek" type="button" aria-label="上一周">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <button class="week-label" id="weekLabel" type="button" aria-haspopup="true" aria-expanded="false">
-        <span id="weekLabelMain">第 1 周</span>
-        <span class="week-dates" id="weekLabelDates"></span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <button class="week-arrow" id="nextWeek" type="button" aria-label="下一周">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
+      <div class="week-stepper" role="group" aria-label="切换教学周">
+        <button class="ws-side" id="prevWeek" type="button" aria-label="上一周">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="ws-main" id="weekLabel" type="button" aria-haspopup="true" aria-expanded="false">
+          <span id="weekLabelMain">第 1 周</span>
+          <span class="week-dates" id="weekLabelDates"></span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+        </button>
+        <button class="ws-side" id="nextWeek" type="button" aria-label="下一周">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="seg" role="group" aria-label="课表视图范围">
+        <button class="seg-btn" id="scopeWork" type="button" aria-pressed="false" title="只显示工作日（周一~五）">工作日</button>
+        <button class="seg-btn active" id="scopeAll" type="button" aria-pressed="true" title="显示完整周（周一~日）">整周</button>
+      </div>
     </div>
 
     <!-- 周选择面板 -->
@@ -412,7 +550,7 @@ details[open] .note-summary .chevron { transform: rotate(180deg); }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12" x3="16" y3="14"/></svg>
           回到本周
         </button>
-        <div class="week-picker-title">选择教学周（灰字 = 本周无课）</div>
+        <div class="week-picker-title">选择教学周（灰字 = 本周无课；右上角橙点 = 周末有安排）</div>
         <div class="week-grid-pick" id="weekGridPick"></div>
       </div>
     </div>
@@ -420,6 +558,12 @@ details[open] .note-summary .chevron { transform: rotate(180deg); }
 
   <!-- 内容 -->
   <main>
+    <!-- 仅工作日视图下、本周周末仍有安排的提示条 -->
+    <div class="week-note hidden" id="weekNote" role="status">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      <span id="weekNoteText"></span>
+      <button type="button" class="week-note-act" id="weekNoteAct">查看整周</button>
+    </div>
     <div class="week-empty-banner hidden" id="weekEmptyBanner">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
       <div>本周暂无课程安排</div>
@@ -598,6 +742,22 @@ window.SCHEDULE_DATA = {
         ],
         "evening": []
       }
+    },
+    {
+      "name": "周六",
+      "courses": {
+        "morning": [],
+        "afternoon": [],
+        "evening": []
+      }
+    },
+    {
+      "name": "周日",
+      "courses": {
+        "morning": [],
+        "afternoon": [],
+        "evening": []
+      }
     }
   ],
   "notes": {
@@ -613,7 +773,9 @@ window.SCHEDULE_DATA = {
       "9月19日开学典礼，典礼安排另行通知",
       "上课说明：32学时课程，每次上课4学时（8周）",
       "16学时课程，每次上课4学时（4周）",
-      "2026级新生课程从第2周开始授课"
+      "2026级新生课程从第2周开始授课",
+      "体检时间：14-18号晚上可在石牌校区校医院体检，或周二、周四上午前往石牌医院（请于上午10点前到达，节假日除外）",
+      "体检补充：9月10日（周四）上午在大学城门诊加开一场，可就近前往参加"
     ]
   }
 };
@@ -627,6 +789,9 @@ window.SCHEDULE_DATA = {
   /* ---------- 教学周参数 ---------- */
   var TOTAL_WEEKS = 20;                       // 校历共 20 个教学周（2026-09-07 ~ 2027-01-24），课程自第 2 周起
   var TERM_START = new Date(2026, 8, 6);      // 2026-09-06（周日），第 1 周起点
+  // 首个教学周一 = TERM_START(周日 9/6) + 1 天 = 2026-09-07。
+  // 真实"当前周"与展示窗口统一按该周一锚点（周一~周日）计周，避免周日定位偏差。
+  var TERM_MONDAY = new Date(TERM_START.getTime() + 1 * 86400000);
 
   // 一天时间轴刻度：08:00（第480分钟）~ 21:30（第1290分钟）
   var DAY_START = 480;
@@ -653,8 +818,29 @@ window.SCHEDULE_DATA = {
     return HOLIDAYS[d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()] || null;
   }
 
+  // 调休补课：周末补上某平日（周一~周五）的课。key 与 holidayOf 同格式；
+  // borrow = 被补的平日名；makeupWeek = 该课对应的（被补的）教学周，用于按开课周过滤。
+  var MAKEUPS = {
+    "2026-9-20":  { borrow: "周二", makeupWeek: 5 },  // 补 10/6（第5周 周二，国庆假内）
+    "2026-10-10": { borrow: "周三", makeupWeek: 5 }   // 补 10/7（第5周 周三，国庆假内）
+  };
+  function makeupOf(d) {
+    return MAKEUPS[d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()] || null;
+  }
+  // 按平日名取 D.days 索引（0=周一 … 6=周日）；找不到返回 -1
+  function dayIndexByName(name) {
+    for (var i = 0; i < D.days.length; i++) if (D.days[i].name === name) return i;
+    return -1;
+  }
+
   var currentWeek = defaultWeek();
   var followToday = true;   // 跟随"真实当前周"：刷新自动定位；手动切周后暂停，返回本周恢复
+  // 视图范围：true = 含周末(周一~周日)，false = 仅工作日(周一~周五)
+  // SMART_DEFAULT=true：首载自动选择——真实周周末有安排→完整周，否则→仅工作日；手动切换后记住本次选择。
+  // 想回到“永远默认完整周”，把下面改为 false 即可。
+  var SMART_DEFAULT = true;
+  var scopeUserChanged = false;
+  var showWeekends = true;
 
   var $ = function (id) { return document.getElementById(id); };
   var els = {
@@ -662,23 +848,28 @@ window.SCHEDULE_DATA = {
     weekLabel: $("weekLabel"), weekLabelMain: $("weekLabelMain"), weekLabelDates: $("weekLabelDates"),
     weekPicker: $("weekPicker"), weekGridPick: $("weekGridPick"),
     prevWeek: $("prevWeek"), nextWeek: $("nextWeek"), weekTodayBtn: $("weekTodayBtn"),
+    scopeWork: $("scopeWork"), scopeAll: $("scopeAll"),
+    weekNote: $("weekNote"), weekNoteText: $("weekNoteText"), weekNoteAct: $("weekNoteAct"),
     weekView: $("weekView"), weekEmptyBanner: $("weekEmptyBanner"),
     noteAdjustList: $("noteAdjustList"), noteArrangeList: $("noteArrangeList")
   };
 
   /* ---------- 工具 ---------- */
-  function defaultWeek() {
-    var now = new Date();
-    var diffDays = Math.floor((now - TERM_START) / 86400000);
-    var wk = Math.floor(diffDays / 7) + 1;
+  function weekOfDate(d) {
+    var diff = Math.floor((d.getTime() - TERM_MONDAY.getTime()) / 86400000);
+    var wk = Math.floor(diff / 7) + 1;
     return Math.min(Math.max(wk, 1), TOTAL_WEEKS);
   }
 
+  function defaultWeek() {
+    return weekOfDate(new Date());
+  }
+
   function weekDates(w) {
-    // 返回该周周一 ~ 周五的 Date 数组
-    var monday = new Date(TERM_START.getTime() + (w - 1) * 7 * 86400000 + 1 * 86400000);
+    // 返回该周周一 ~ 周日的 Date 数组（第 w 周：周一 = TERM_MONDAY + (w-1)*7 天）
+    var monday = new Date(TERM_MONDAY.getTime() + (w - 1) * 7 * 86400000);
     var arr = [];
-    for (var i = 0; i < 5; i++) arr.push(new Date(monday.getTime() + i * 86400000));
+    for (var i = 0; i < 7; i++) arr.push(new Date(monday.getTime() + i * 86400000));
     return arr;
   }
 
@@ -687,8 +878,39 @@ window.SCHEDULE_DATA = {
   }
 
   function fmtRange(w) {
+    // 紧凑格式（如 9/21-9/27），配合下方灰字显示日期范围
     var dates = weekDates(w);
-    return fmtDate(dates[0]) + " - " + fmtDate(dates[4]);
+    var a = dates[0], b = dates[showWeekends ? 6 : 4];
+    return (a.getMonth() + 1) + "/" + a.getDate() + " - " + (b.getMonth() + 1) + "/" + b.getDate();
+  }
+
+  // 该周是否含调休补课
+  function weekHasMakeup(w) {
+    var ds = weekDates(w);
+    for (var i = 0; i < ds.length; i++) if (makeupOf(ds[i])) return true;
+    return false;
+  }
+
+  // 该周周末（六/日）是否有安排：补课，或数据里排的周末课程
+  function weekendHasArrangement(w) {
+    if (weekHasMakeup(w)) return true;
+    var ds = weekDates(w);
+    if (ds.length < 7) return false;
+    for (var i = 5; i < ds.length; i++) {
+      var day = D.days[i];
+      for (var pi = 0; pi < D.periods.length; pi++) {
+        var list = day.courses[D.periods[pi].id] || [];
+        for (var cj = 0; cj < list.length; cj++) {
+          if (courseInWeek(list[cj], w)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // 视图列数：含周末 = 7；仅工作日 = 5
+  function visibleCols() {
+    return showWeekends ? 7 : 5;
   }
 
   function parseWeeks(nature) {
@@ -730,25 +952,29 @@ window.SCHEDULE_DATA = {
     });
   }
 
-  function todayIdx() {
+  function sameDate(a, b) {
+    return a.getFullYear() === b.getFullYear() &&
+           a.getMonth() === b.getMonth() &&
+           a.getDate() === b.getDate();
+  }
+
+  // 在给定的一周日期数组中返回"今天"的列索引（含周六/周日）；不在该周返回 -1
+  function todayIndexIn(dates) {
     var now = new Date();
-    var d = now.getDay();
-    return (d >= 1 && d <= 5) ? d - 1 : -1;
+    for (var i = 0; i < dates.length; i++) {
+      if (sameDate(dates[i], now)) return i;
+    }
+    return -1;
   }
 
   function isCurrentWeek() {
-    var now = new Date();
-    var diffDays = Math.floor((now - TERM_START) / 86400000);
-    var wk = Math.floor(diffDays / 7) + 1;
-    return wk === currentWeek;
+    return weekOfDate(new Date()) === currentWeek;
   }
 
-  /* 将今天的卡片滚动到可视范围内（仅当前周且已开学时；周视图已改为多列网格，无需横向滚动） */
+  /* 将"今天"所在列滚动到可视范围内（仅当前为真实周且今天在该周网格里时；含周六/周日） */
   function scrollToToday() {
-    var now = new Date();
-    var diffDays = Math.floor((now - TERM_START) / 86400000);
-    if (diffDays < 0 || !isCurrentWeek()) return;
-    var t = todayIdx();
+    if (!isCurrentWeek()) return;
+    var t = todayIndexIn(weekDates(currentWeek));
     if (t < 0) return;
     var el = document.getElementById("day-" + t);
     if (el && el.scrollIntoView) {
@@ -789,14 +1015,17 @@ window.SCHEDULE_DATA = {
     els.prevWeek.disabled = currentWeek <= 1;
     els.nextWeek.disabled = currentWeek >= TOTAL_WEEKS;
     // 是否显示"返回本周"（只要当前不在真实周就显示，开学前也允许）
-    var now = new Date();
-    var diffDays = Math.floor((now - TERM_START) / 86400000);
-    var realWeek = Math.min(Math.max(Math.floor(diffDays / 7) + 1, 1), TOTAL_WEEKS);
-    if (realWeek !== currentWeek) {
+    if (defaultWeek() !== currentWeek) {
       els.weekTodayBtn.classList.add("visible");
     } else {
       els.weekTodayBtn.classList.remove("visible");
     }
+    // 视图范围分段控件高亮
+    var on = showWeekends;
+    els.scopeWork.setAttribute("aria-pressed", on ? "false" : "true");
+    els.scopeAll.setAttribute("aria-pressed", on ? "true" : "false");
+    els.scopeWork.classList.toggle("active", !on);
+    els.scopeAll.classList.toggle("active", on);
   }
 
   function renderWeekPicker() {
@@ -805,11 +1034,15 @@ window.SCHEDULE_DATA = {
       var has = weekHasCourse(w);
       var pressed = w === currentWeek ? ' aria-pressed="true"' : "";
       var noCls = has ? "" : " no-course";
+      var wknd = weekendHasArrangement(w);
+      var mkCls = wknd ? " has-mk" : "";
       var dates = weekDates(w);
       var label = "第" + w + "周";
       var sub = (dates[0].getMonth() + 1) + "/" + dates[0].getDate();
-      html += '<button class="week-pick-btn' + noCls + '" data-week="' + w + '"' + pressed + '>' +
-        label + "<small>" + sub + "</small></button>";
+      html += '<button class="week-pick-btn' + noCls + mkCls + '" data-week="' + w + '"' + pressed +
+        (wknd ? ' title="本周周末有安排"' : "") + '>' +
+        label + "<small>" + sub + "</small>" + (wknd ? '<i class="wk-dot" aria-hidden="true"></i>' : "") +
+        "</button>";
     }
     els.weekGridPick.innerHTML = html;
     els.weekGridPick.querySelectorAll(".week-pick-btn").forEach(function (btn) {
@@ -827,6 +1060,11 @@ window.SCHEDULE_DATA = {
     els.weekPicker.classList.add("open");
     els.weekLabel.classList.add("open");
     els.weekLabel.setAttribute("aria-expanded", "true");
+    // 打开后尽量让当前周按钮可见（不在可视区时才轻微滚动）
+    var cur = els.weekGridPick.querySelector('[aria-pressed="true"]');
+    if (cur && cur.scrollIntoView) {
+      try { cur.scrollIntoView({ block: "nearest" }); } catch (e) {}
+    }
   }
   function closePicker() {
     els.weekPicker.classList.remove("open");
@@ -836,8 +1074,10 @@ window.SCHEDULE_DATA = {
 
   /* ---------- 渲染：整周视图（时间轴课表） ---------- */
   function renderWeekView() {
-    var dates = weekDates(currentWeek);
-    var tIdx = todayIdx();
+    var allDates = weekDates(currentWeek);
+    var n = visibleCols();                       // 7（含周末）或 5（仅工作日）
+    var dates = allDates.slice(0, n);
+    var tIdx = todayIndexIn(allDates);           // 今天在本周内的列索引（含周六/周日），不在则 -1
     var anyCourse = false;
     var side = "", heads = "", tracks = "";
 
@@ -851,58 +1091,112 @@ window.SCHEDULE_DATA = {
     }
     side += "</div>";
 
-    // 表头行：周一~周五（周几 + 日期 + 节假日标记）
-    D.days.forEach(function (day, i) {
+    // 预计算每列信息（表头/轨道共用，保证今天、补课、空周末弱化一致）
+    var cols = [];
+    for (var i = 0; i < n; i++) {
       var d = dates[i];
-      var isToday = (isCurrentWeek() && i === tIdx);
-      heads += '<div class="day-head' + (isToday ? " is-today" : "") + '">';
-      heads += '<span class="day-name">' + day.name + "</span>";
-      heads += '<time class="day-date" datetime="' + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + '">' + fmtDate(d) + "</time>";
+      var mk = makeupOf(d);
+      var hasData = false;
+      if (!mk) {
+        var day = D.days[i];
+        var pd, list, cj;
+        outer:
+        for (pd = 0; pd < D.periods.length; pd++) {
+          list = day.courses[D.periods[pd].id] || [];
+          for (cj = 0; cj < list.length; cj++) {
+            if (courseInWeek(list[cj], currentWeek)) { hasData = true; break outer; }
+          }
+        }
+      }
+      cols.push({ day: D.days[i], d: d, mk: mk, muted: (i >= 5) && !mk && !hasData });
+    }
+
+    // 表头行：周几 + 日期；补课列在右上角加"补"三角旗标；无课的周末列表头弱化
+    cols.forEach(function (c, i) {
+      var isToday = (i === tIdx);
+      heads += '<div class="day-head' + (isToday ? " is-today" : "") + (c.muted ? " weekend-muted" : "") + '">';
+      heads += '<span class="day-name">' + c.day.name + "</span>";
+      heads += '<time class="day-date" datetime="' + c.d.getFullYear() + "-" + (c.d.getMonth() + 1) + "-" + c.d.getDate() + '">' + fmtDate(c.d) + "</time>";
+      if (c.mk) heads += '<span class="mk-corner" aria-hidden="true">补</span>';
       heads += "</div>";
     });
 
-    // 轨道行：周一~周五；法定节假日当天显示放假，否则课程块按时段定位、高度按课时占比
-    D.days.forEach(function (day, i) {
-      var isToday = (isCurrentWeek() && i === tIdx);
+    // 轨道行：课程按时段定位；补课日借用被补平日的课（按被补周过滤开课周）；空周末弱化显示"休息"
+    cols.forEach(function (c, i) {
+      var isToday = (i === tIdx);
       var cls = isToday ? " is-today" : "";
-      var d = dates[i];
-      var hol = holidayOf(d);
+      var hol = holidayOf(c.d);
       var dayHas = false;
-      var track = '<div class="day-track' + cls + '" id="day-' + i + '">';
+      var track = '<div class="day-track' + cls + (c.muted ? " weekend-muted" : "") + '" id="day-' + i + '">';
 
-      if (hol) {
+      if (hol && !c.mk) {
         track += '<div class="day-empty">无课</div>';
       } else {
+        var srcIdx = c.mk ? dayIndexByName(c.mk.borrow) : i;
+        var src = D.days[srcIdx >= 0 ? srcIdx : i];
+        var filterWeek = c.mk ? (c.mk.makeupWeek || currentWeek) : currentWeek;
+
         D.periods.forEach(function (p) {
           var meta = periodMeta[p.id];
-          var courses = (day.courses[p.id] || []).filter(function (c) { return courseInWeek(c, currentWeek); });
+          var courses = (src.courses[p.id] || []).filter(function (cr) { return courseInWeek(cr, filterWeek); });
           if (courses.length === 0) return; // 该时段无课则不显示
           dayHas = true;
           anyCourse = true;
           var top = pct(meta.start);
           var hgt = (meta.end - meta.start) / DAY_TOTAL * 100;
-          courses.forEach(function (c) {
+          courses.forEach(function (cr) {
             track += '<div class="course-block ' + meta.className + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)">';
             track += '<div class="cb-time">' + meta.time + "</div>";
-            track += '<div class="cb-name">' + escapeHtml(c.name) + "</div>";
-            if (c.teacher) track += '<div class="cb-teacher">' + escapeHtml(c.teacher) + "</div>";
-            if (c.location) track += '<div class="cb-location">' + escapeHtml(c.location) + "</div>";
+            track += '<div class="cb-name">' + escapeHtml(cr.name) + "</div>";
+            if (cr.teacher) track += '<div class="cb-teacher">' + escapeHtml(cr.teacher) + "</div>";
+            if (cr.location) track += '<div class="cb-location">' + escapeHtml(cr.location) + "</div>";
             track += "</div>";
           });
         });
 
-        if (!dayHas) track += '<div class="day-empty">无课</div>';
+        if (!dayHas) {
+          track += '<div class="day-empty">' + (c.muted ? "休息" : "无课") + "</div>";
+        }
       }
       track += "</div>";
       tracks += track;
     });
 
-    // 结构：固定左栏（时间轴）+ 右侧可滚动区（日期表头 + 轨道）
+    // 结构：固定左栏（时间轴）+ 右侧可滚动区（日期表头 + 轨道）；仅工作日时为 5 列
     els.weekView.innerHTML = '<div class="week-side">' + side + '</div>' +
-      '<div class="week-scroll"><div class="week-grid">' + heads + tracks + '</div></div>';
+      '<div class="week-scroll"><div class="week-grid' + (n < 7 ? " cols-5" : "") + '">' + heads + tracks + '</div></div>';
     // 整周无课（含节假日）→ 隐藏课表，仅显示"本周暂无课程安排"
     els.weekView.classList.toggle("hidden", !anyCourse);
     els.weekEmptyBanner.classList.toggle("hidden", anyCourse);
+  }
+
+  /* ---------- 渲染：周末安排提示条 ---------- */
+  /* 仅工作日视图 + 该周周末确有安排（补课/周末课）时显示，提醒可切回完整周查看 */
+  function renderWeekNote() {
+    if (showWeekends || !weekendHasArrangement(currentWeek)) {
+      els.weekNote.classList.add("hidden");
+      return;
+    }
+    var ds = weekDates(currentWeek);
+    var parts = [];
+    for (var i = 5; i < 7 && i < ds.length; i++) {
+      var d = ds[i];
+      var mk = makeupOf(d);
+      if (mk) {
+        parts.push(fmtDate(d) + "（" + D.days[i].name + "）补课");
+      } else {
+        var day = D.days[i], has = false, pi, list, cj;
+        for (pi = 0; pi < D.periods.length && !has; pi++) {
+          list = day.courses[D.periods[pi].id] || [];
+          for (cj = 0; cj < list.length; cj++) {
+            if (courseInWeek(list[cj], currentWeek)) { has = true; break; }
+          }
+        }
+        if (has) parts.push(fmtDate(d) + "（" + D.days[i].name + "）有课");
+      }
+    }
+    els.weekNoteText.textContent = "本周周末有安排：" + parts.join("、") + "。";
+    els.weekNote.classList.remove("hidden");
   }
 
   /* ---------- 渲染：备注 ---------- */
@@ -926,6 +1220,7 @@ window.SCHEDULE_DATA = {
   function refresh() {
     updateHeader();
     renderWeekBar();
+    renderWeekNote();
     renderWeekView();
     renderWeekPicker();
   }
@@ -933,6 +1228,10 @@ window.SCHEDULE_DATA = {
 
   /* ---------- 启动 ---------- */
   function init() {
+    // 首载默认视图：SMART_DEFAULT=true 时，按真实周周末是否有安排自动选择完整周/仅工作日
+    if (!scopeUserChanged) {
+      showWeekends = SMART_DEFAULT ? weekendHasArrangement(defaultWeek()) : true;
+    }
     els.prevWeek.addEventListener("click", function () {
       followToday = false;
       if (currentWeek > 1) { currentWeek--; refresh(); }
@@ -946,14 +1245,21 @@ window.SCHEDULE_DATA = {
       else openPicker();
     });
     els.weekTodayBtn.addEventListener("click", function () {
-      var now = new Date();
-      var diffDays = Math.floor((now - TERM_START) / 86400000);
-      currentWeek = Math.min(Math.max(Math.floor(diffDays / 7) + 1, 1), TOTAL_WEEKS);
+      currentWeek = defaultWeek();
       followToday = true;
       closePicker();
       refresh();
       setTimeout(scrollToToday, 80);
     });
+    function setScope(v) {
+      scopeUserChanged = true;
+      showWeekends = v;
+      refresh();
+      setTimeout(scrollToToday, 80);
+    }
+    els.scopeWork.addEventListener("click", function () { setScope(false); });
+    els.scopeAll.addEventListener("click", function () { setScope(true); });
+    els.weekNoteAct.addEventListener("click", function () { setScope(true); });
     document.addEventListener("click", function (e) {
       if (els.weekPicker.classList.contains("open") &&
           !els.weekPicker.contains(e.target) && !els.weekLabel.contains(e.target)) {
