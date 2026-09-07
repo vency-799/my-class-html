@@ -104,14 +104,14 @@ a { color: inherit; text-decoration: none; }
 .week-stepper {
   flex: 1 1 auto; min-width: 0;
   display: flex; align-items: stretch;
-  height: 30px;
-  border-radius: 9px;
+  height: 45px;
+  border-radius: 14px;
   background: var(--color-surface);
   box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 6px rgba(0, 0, 0, .06);
   overflow: hidden;
 }
 .ws-side {
-  flex: 0 0 36px;
+  flex: 0 0 46px;
   display: flex; align-items: center; justify-content: center;
   background: transparent; border: 0; cursor: pointer;
   color: var(--color-text-secondary);
@@ -123,7 +123,7 @@ a { color: inherit; text-decoration: none; }
 .ws-side:active { background: rgba(0, 0, 0, .05); }
 .ws-side:disabled { opacity: .3; cursor: default; }
 .ws-side:disabled:active { background: transparent; }
-.ws-side svg { width: 16px; height: 16px; }
+.ws-side svg { width: 22px; height: 22px; }
 .ws-main {
   position: relative;
   flex: 1 1 auto; min-width: 0;
@@ -137,25 +137,25 @@ a { color: inherit; text-decoration: none; }
 .ws-main:active { background: rgba(0, 0, 0, .03); }
 /* 三元素分别固定在 左 / 中 / 右，互不影响、不再随内容长度挤动 */
 .ws-main #weekLabelMain {
-  position: absolute; left: 12px; top: 50%;
+  position: absolute; left: 16px; top: 50%;
   transform: translateY(-50%);
-  width: 56px; text-align: right;      /* 固定宽区右对齐 → 右边缘恒定 */
-  font-size: 13px; font-weight: 700; line-height: 1.2;
-  letter-spacing: .2px; white-space: nowrap;
+  width: 82px; text-align: right;      /* 固定宽区右对齐 → 右边缘恒定（16+82=98） */
+  font-size: 17px; font-weight: 700; line-height: 1.2;
+  letter-spacing: .4px; white-space: nowrap;
 }
 .ws-main .week-dates {
-  position: absolute; left: 90px; top: 50%;       /* 68(标签右缘) + 22(恒定间隔) */
+  position: absolute; left: 120px; top: 50%;      /* 98(标签右缘) + 22(恒定间隔) */
   transform: translateY(-50%);
-  max-width: max(34px, calc(100% - 130px));   /* 预留右侧 ⇄ 图标区，并保证至少可见一段 */
+  max-width: max(44px, calc(100% - 168px));   /* 预留右侧 ⇄ 图标区，并保证至少可见一段 */
   overflow: hidden; white-space: nowrap; text-align: left;
-  font-size: 9.5px; font-weight: 500; line-height: 1.2;
+  font-size: 12.5px; font-weight: 500; line-height: 1.2;
   color: var(--color-text-tertiary); opacity: .9;
   font-variant-numeric: tabular-nums;
 }
 .ws-main .chevron {
-  position: absolute; right: 12px; top: 50%;
+  position: absolute; right: 18px; top: 50%;
   transform: translateY(-50%);
-  width: 13px; height: 13px;
+  width: 20px; height: 20px;
   color: var(--color-text-tertiary);
   opacity: .85;
   transition: color .2s;
@@ -167,17 +167,17 @@ a { color: inherit; text-decoration: none; }
   flex: 0 0 auto;
   display: inline-flex;
   background: var(--color-surface);
-  border-radius: 9px;
-  padding: 2px;
-  gap: 2px;
+  border-radius: 14px;
+  padding: 3px;
+  gap: 3px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 2px 6px rgba(0, 0, 0, .06);
 }
 .seg-btn {
   border: 0; cursor: pointer; font-family: inherit;
-  height: 26px; padding: 0 13px;
-  border-radius: 7px;
+  height: 39px; padding: 0 18px;
+  border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
-  font-size: var(--text-xs); font-weight: 600;
+  font-size: 14px; font-weight: 600;
   color: var(--color-text-secondary);
   background: transparent;
   -webkit-tap-highlight-color: transparent;
@@ -188,18 +188,18 @@ a { color: inherit; text-decoration: none; }
   background: rgba(0, 122, 255, .12);
   color: var(--color-primary);
 }
-@media (max-width: 400px) {
-  .seg-btn { padding: 0 10px; font-size: 11px; }
-}
-
-/* 窄屏（手机竖屏 PWA）：顶部栏整体收紧，把空间让给日期范围，保证完整显示不被裁剪
-   —— 各固定区之间仍保持恒定间隔（标签右缘 8+54=62，日期起点 70 → 间隔 8） */
-@media (max-width: 430px) {
-  .week-bar { padding: 2px 10px 8px; }
+/* 顶部选择器放大后的窄屏适配：大字号/大标签区在窄屏会把日期挤爆，
+   故 ≤560px 用紧凑几何（更小字号、更窄标签区），把空间让给日期范围，
+   保证任意教学周完整显示不被裁剪——各固定区间隔仍恒定（标签右缘 8+54=62，日期起点 70 → 间隔 8）。
+   高度与主控件一致保持 45px（stepper / seg 同步）。 */
+@media (max-width: 560px) {
+  .week-bar { padding: 2px 10px 10px; }
   .ws-side { flex-basis: 30px; }
-  .ws-main #weekLabelMain { left: 8px; width: 54px; }
-  .ws-main .week-dates { left: 70px; max-width: max(30px, calc(100% - 100px)); }
-  .ws-main .chevron { right: 8px; }
+  .ws-side svg { width: 18px; height: 18px; }
+  .ws-main #weekLabelMain { left: 8px; width: 54px; font-size: 13px; letter-spacing: .2px; }
+  .ws-main .week-dates { left: 70px; font-size: 9.5px; max-width: max(30px, calc(100% - 100px)); }
+  .ws-main .chevron { right: 8px; width: 16px; height: 16px; }
+  .seg-btn { height: 39px; padding: 0 10px; font-size: 11px; }
 }
 
 /* 返回本周按钮：位于周选择面板顶部，远离箭头避免误触 */
@@ -269,7 +269,7 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
 /* 周末安排提示条：仅工作日视图下、本周周末仍有补课/课时显示 */
 .week-note {
   display: flex; align-items: center; gap: 8px;
-  margin: 0 0 12px;
+  margin: 7px 0 12px;   /* 上下间距一致：上方距控制条 12、下方距课表 12 */
   padding: 8px 10px 8px 12px;
   border-radius: var(--radius-md);
   background: rgba(255, 159, 10, .12);
@@ -377,7 +377,7 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
   color: #fff;
   font-size: 9px; font-weight: 700; line-height: 1;
   display: flex; align-items: flex-start; justify-content: flex-end;
-  padding: 3px 6px 0 0;
+  padding: 5px 4px 0 0;
   pointer-events: none; user-select: none;
 }
 
