@@ -506,6 +506,60 @@ details[open] .note-summary .chevron { transform: rotate(180deg); }
 
 .hidden { display: none !important; }
 
+/* ============ 课程详情弹窗 ============ */
+.course-block { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.course-block:hover { border-color: rgba(0, 0, 0, .1); }
+.modal-mask {
+  position: fixed; inset: 0; z-index: 1300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(12, 12, 16, .42);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .2s ease-out, visibility .2s ease-out;
+}
+.modal-mask.show { opacity: 1; visibility: visible; pointer-events: auto; }
+body.modal-open { overflow: hidden; }
+.modal-card {
+  position: relative;   /* 让右上角 ✕ 等绝对定位子元素始终以卡片为基准 */
+  width: min(100%, 400px);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px 22px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .28);
+  transform: translateY(14px) scale(.98);
+  transition: transform .22s cubic-bezier(.2, .8, .25, 1);
+}
+.modal-mask.show .modal-card { transform: none; }
+.modal-close {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  background: rgba(0, 0, 0, .05);
+  transition: background .15s;
+}
+.modal-close:active { background: rgba(0, 0, 0, .12); }
+.cm-head { display: flex; align-items: center; gap: 8px; min-height: 20px; margin-bottom: 6px; }
+.cm-meta { font-size: var(--text-sm); color: var(--color-text-tertiary); font-weight: 500; }
+.cm-mk {
+  font-size: 10px; font-weight: 700; color: #fff; background: var(--color-warn);
+  border-radius: 999px; padding: 2px 9px; letter-spacing: .2px;
+}
+.cm-name { font-size: 20px; font-weight: 700; line-height: 1.35; color: var(--color-text); }
+.cm-rows { margin-top: 12px; }
+.cm-row {
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 12px 0; border-top: 1px solid var(--color-border);
+}
+.cm-row dt {
+  flex: 0 0 60px; font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+.cm-row dd {
+  flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--color-text);
+  line-height: 1.5; overflow-wrap: anywhere;
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -602,6 +656,25 @@ details[open] .note-summary .chevron { transform: rotate(180deg); }
 
   </main>
 
+</div>
+
+<!-- 课程详情弹窗（遮罩 + 居中卡片） -->
+<div class="modal-mask" id="courseModal" role="dialog" aria-modal="true" aria-label="课程详情">
+  <div class="modal-card">
+    <button class="modal-close" id="courseModalClose" type="button" aria-label="关闭">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="cm-head">
+      <span class="cm-meta" id="cmMeta"></span>
+      <span class="cm-mk hidden" id="cmMk"></span>
+    </div>
+    <h2 class="cm-name" id="cmName"></h2>
+    <dl class="cm-rows">
+      <div class="cm-row"><dt>课程时间</dt><dd id="cmTime"></dd></div>
+      <div class="cm-row"><dt>任课老师</dt><dd id="cmTeacher"></dd></div>
+      <div class="cm-row"><dt>上课地点</dt><dd id="cmLocation"></dd></div>
+    </dl>
+  </div>
 </div>
 
 <script>/* 数据已内联（由 2026级全日制第一学期课程表.xlsx 提取） */
@@ -1145,7 +1218,13 @@ window.SCHEDULE_DATA = {
           var top = pct(meta.start);
           var hgt = (meta.end - meta.start) / DAY_TOTAL * 100;
           courses.forEach(function (cr) {
-            track += '<div class="course-block ' + meta.className + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)">';
+            track += '<div class="course-block ' + meta.className + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)"' +
+              ' data-name="' + escapeHtml(cr.name) + '"' +
+              ' data-time="' + meta.time + '" data-slot="' + meta.label + '"' +
+              ' data-teacher="' + escapeHtml(cr.teacher || "") + '"' +
+              ' data-location="' + escapeHtml(cr.location || "") + '"' +
+              ' data-week="' + c.day.name + '" data-date="' + fmtDate(c.d) + '"' +
+              ' data-mk="' + escapeHtml(c.mk ? c.mk.borrow : "") + '">';
             track += '<div class="cb-time">' + meta.time + "</div>";
             track += '<div class="cb-name">' + escapeHtml(cr.name) + "</div>";
             if (cr.teacher) track += '<div class="cb-teacher">' + escapeHtml(cr.teacher) + "</div>";
@@ -1197,6 +1276,40 @@ window.SCHEDULE_DATA = {
     }
     els.weekNoteText.textContent = "本周周末有安排：" + parts.join("、") + "。";
     els.weekNote.classList.remove("hidden");
+  }
+
+  /* ---------- 课程详情弹窗 ---------- */
+  var courseModalCache = null;
+  function courseModal() {
+    if (!courseModalCache) {
+      courseModalCache = {
+        mask: $("courseModal"), close: $("courseModalClose"),
+        meta: $("cmMeta"), mk: $("cmMk"), name: $("cmName"),
+        time: $("cmTime"), teacher: $("cmTeacher"), location: $("cmLocation")
+      };
+    }
+    return courseModalCache;
+  }
+  function openCourseModal(blk) {
+    var d = blk.dataset, m = courseModal();
+    m.name.textContent = d.name || "课程";
+    m.time.textContent = (d.slot ? d.slot + " " : "") + (d.time || "");
+    m.teacher.textContent = d.teacher || "—";
+    m.location.textContent = d.location || "—";
+    m.meta.textContent = (d.week || "") + (d.date ? " · " + d.date : "");
+    if (d.mk) {
+      m.mk.textContent = "调休 · 补 " + d.mk + " 的课";
+      m.mk.classList.remove("hidden");
+    } else {
+      m.mk.classList.add("hidden");
+    }
+    m.mask.classList.add("show");
+    document.body.classList.add("modal-open");
+  }
+  function closeCourseModal() {
+    var m = courseModal();
+    m.mask.classList.remove("show");
+    document.body.classList.remove("modal-open");
   }
 
   /* ---------- 渲染：备注 ---------- */
@@ -1260,6 +1373,27 @@ window.SCHEDULE_DATA = {
     els.scopeWork.addEventListener("click", function () { setScope(false); });
     els.scopeAll.addEventListener("click", function () { setScope(true); });
     els.weekNoteAct.addEventListener("click", function () { setScope(true); });
+
+    // 课程卡点击 → 课程详情弹窗（事件委托）
+    (function () {
+      var mm = courseModal();
+      document.addEventListener("click", function (e) {
+        var t = e.target;
+        var blk = t && t.closest ? t.closest(".course-block") : null;
+        if (blk) openCourseModal(blk);
+      });
+      mm.close.addEventListener("click", function (e) {
+        e.stopPropagation();
+        closeCourseModal();
+      });
+      mm.mask.addEventListener("click", function (e) {
+        if (e.target === mm.mask) closeCourseModal();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeCourseModal();
+      });
+    })();
+
     document.addEventListener("click", function (e) {
       if (els.weekPicker.classList.contains("open") &&
           !els.weekPicker.contains(e.target) && !els.weekLabel.contains(e.target)) {
