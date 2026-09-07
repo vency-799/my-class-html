@@ -477,14 +477,14 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
 }
 .note-summary {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px;
+  height: 52px; padding: 0 16px;
   font-size: var(--text-base); font-weight: 600;
   cursor: pointer;
   list-style: none;
 }
 .note-summary::-webkit-details-marker { display: none; }
-.note-summary .note-icon { display: inline-flex; align-items: center; gap: 8px; }
-.note-summary .note-icon svg { width: 17px; height: 17px; opacity: .7; }
+.note-summary .note-icon { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.note-summary .note-icon svg { width: 18px; height: 18px; flex: 0 0 auto; opacity: .7; }
 .note-summary .chevron {
   width: 18px; height: 18px; opacity: .6;
   transition: transform .25s ease-out;
@@ -560,6 +560,76 @@ body.modal-open { overflow: hidden; }
   flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--color-text);
   line-height: 1.5; overflow-wrap: anywhere;
 }
+
+/* ============ 底部入口：原始课程表（与备注卡片同款） ============ */
+.sheet-entry { margin-top: 0; }
+.sheet-entry-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; height: 52px; padding: 0 16px;
+  background: var(--color-surface);
+  border: none; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text); text-align: left; cursor: pointer;
+  font: inherit; font-size: var(--text-base); font-weight: 600;
+  transition: box-shadow .18s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheet-entry-btn:active { box-shadow: var(--shadow-card-hover); }
+.sheet-entry-btn .sheet-entry-ico {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0;
+}
+.sheet-entry-btn .sheet-entry-ico svg {
+  width: 18px; height: 18px; flex: 0 0 auto; opacity: .7;
+}
+.sheet-entry-btn > svg {
+  width: 18px; height: 18px; flex: 0 0 auto; margin-left: 8px; opacity: .6;
+}
+
+/* ============ 原表弹层（整份 Excel 课程表） ============ */
+.modal-card--sheet {
+  width: min(100%, 700px);
+  max-height: min(86vh, 780px);
+  padding: 0; overflow: hidden;
+  display: flex; flex-direction: column; align-items: stretch;
+}
+.sheet-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 10px 12px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+.sheet-title {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 17px; font-weight: 700; color: var(--color-text);
+}
+.sheet-title svg { flex: 0 0 auto; width: 18px; height: 18px; opacity: .7; }
+.sheet-close { position: static; margin: 0; flex: 0 0 auto; }
+.sheet-scroll {
+  flex: 1 1 auto; min-height: 0;
+  padding: 8px 18px 22px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.os-day { margin-bottom: 14px; }
+.os-day-head { display: flex; align-items: center; margin: 0 0 8px; }
+.os-day-name {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; height: 26px; padding: 0 13px;
+  font-size: var(--text-sm); font-weight: 700;
+  color: var(--color-text-secondary);
+  background: rgba(0, 0, 0, .045);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+}
+.os-band { margin: 0 0 8px; padding-left: 12px; border-left: 2px solid rgba(0, 0, 0, .06); }
+.os-band-cap { display: flex; align-items: baseline; gap: 7px; margin-bottom: 2px; }
+.os-band-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; align-self: center; }
+.os-band-cap b { font-size: var(--text-sm); font-weight: 700; color: var(--color-text-secondary); }
+.os-band-cap i { font-style: normal; font-size: var(--text-xs); color: var(--color-text-tertiary); }
+.os-card { display: block; padding: 7px 0; }
+.os-main { min-width: 0; }
+.os-name { font-size: var(--text-sm); font-weight: 650; color: var(--color-text); line-height: 1.4; }
+.os-meta { margin-top: 1px; font-size: var(--text-xs); color: var(--color-text-tertiary); line-height: 1.6; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
@@ -654,6 +724,17 @@ body.modal-open { overflow: hidden; }
       </details>
     </section>
 
+    <!-- 原始课程表（原 Excel 全表）入口 -->
+    <section class="sheet-entry" aria-label="原始课程表">
+      <button type="button" class="sheet-entry-btn" id="origEntry">
+        <span class="sheet-entry-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+          原始课程表（Excel 原表）
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>
+    </section>
+
   </main>
 
 </div>
@@ -674,6 +755,22 @@ body.modal-open { overflow: hidden; }
       <div class="cm-row"><dt>任课老师</dt><dd id="cmTeacher"></dd></div>
       <div class="cm-row"><dt>上课地点</dt><dd id="cmLocation"></dd></div>
     </dl>
+  </div>
+</div>
+
+<!-- 原始课程表大视图（遮罩 + 居中滚动面板） -->
+<div class="modal-mask" id="origModal" role="dialog" aria-modal="true" aria-label="原始课程表">
+  <div class="modal-card modal-card--sheet">
+    <div class="sheet-head">
+      <h2 class="sheet-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+        原始课程表
+      </h2>
+      <button class="modal-close sheet-close" id="origClose" type="button" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-scroll" id="origBody"></div>
   </div>
 </div>
 
@@ -713,7 +810,6 @@ window.SCHEDULE_DATA = {
             "name": "商务沟通",
             "nature": "2-5周",
             "teacher": "梅虎",
-            "phone": "18664600668",
             "location": "文三栋407室"
           }
         ],
@@ -737,7 +833,6 @@ window.SCHEDULE_DATA = {
             "name": "公司财务",
             "nature": "2-9周",
             "teacher": "徐思",
-            "phone": "13660216796",
             "location": "文三栋407室"
           }
         ],
@@ -746,7 +841,6 @@ window.SCHEDULE_DATA = {
             "name": "人力资源管理",
             "nature": "2-9周",
             "teacher": "张华初",
-            "phone": "13825190516",
             "location": "文三栋407室"
           }
         ],
@@ -761,14 +855,12 @@ window.SCHEDULE_DATA = {
             "name": "MBA商务英语",
             "nature": "2-9周",
             "teacher": "赖小东",
-            "phone": "13925149658",
             "location": "文三栋407室"
           },
           {
             "name": "企业伦理",
             "nature": "10-17周",
             "teacher": "冯巨章",
-            "phone": "13560363269",
             "location": "文三栋407室"
           }
         ],
@@ -784,7 +876,6 @@ window.SCHEDULE_DATA = {
             "name": "管理经济学",
             "nature": "9-16周",
             "teacher": "刘愿",
-            "phone": "13560363269",
             "location": "文三栋407室"
           }
         ],
@@ -800,7 +891,6 @@ window.SCHEDULE_DATA = {
             "name": "管理心理学",
             "nature": "2-9周",
             "teacher": "熊冠星",
-            "phone": "15521380045",
             "location": "文三栋407室"
           }
         ],
@@ -809,7 +899,6 @@ window.SCHEDULE_DATA = {
             "name": "职业生涯管理",
             "nature": "2-5周",
             "teacher": "蔡圣刚",
-            "phone": "13609739367",
             "location": "文三栋407室"
           }
         ],
@@ -852,6 +941,9 @@ window.SCHEDULE_DATA = {
     ]
   }
 };
+
+/* 原表镜像（手机号已脱敏去除）：由 2026级全日制第一学期课程表.xlsx 提取，仅供底部“原始课程表”查看 */
+window.SCHEDULE_ORIG = {"title":"2026-2027学年第一学期全日制MBA课程表（2026级）","bandOrder":["morning","afternoon","evening"],"days":[{"day":"周一","bands":[{"key":"morning","label":"上午","time":"8:30-11:50（4节）","items":[{"name":"商务沟通","nature":"2-5周","teacher":"梅虎","location":"文三栋407室"}]},{"key":"evening","label":"晚上","time":"6:30-9:00","items":[{"name":"公共政治课","nature":"从第二周开始","teacher":"专题形式","location":"教学楼1栋-302"}]}]},{"day":"周二","bands":[{"key":"morning","label":"上午","time":"8:30-11:50（4节）","items":[{"name":"公司财务","nature":"2-9周","teacher":"徐思","location":"文三栋407室"}]},{"key":"afternoon","label":"下午","time":"2:00-5:10（4节）","items":[{"name":"人力资源管理","nature":"2-9周","teacher":"张华初","location":"文三栋407室"}]}]},{"day":"周三","bands":[{"key":"morning","label":"上午","time":"8:30-11:50（4节）","items":[{"name":"MBA商务英语","nature":"2-9周","teacher":"赖小东","location":"文三栋407室"},{"name":"企业伦理","nature":"10-17周","teacher":"冯巨章","location":"文三栋407室"}]}]},{"day":"周四","bands":[{"key":"morning","label":"上午","time":"8:30-11:50（4节）","items":[{"name":"管理经济学","nature":"9-16周","teacher":"刘愿","location":"文三栋407室"}]}]},{"day":"周五","bands":[{"key":"morning","label":"上午","time":"8:30-11:50（4节）","items":[{"name":"管理心理学","nature":"2-9周","teacher":"熊冠星","location":"文三栋407室"}]},{"key":"afternoon","label":"下午","time":"2:00-5:10（4节）","items":[{"name":"职业生涯管理","nature":"2-5周","teacher":"蔡圣刚","location":"文三栋407室"}]}]}]};
 
 </script>
 <script>
@@ -924,7 +1016,8 @@ window.SCHEDULE_DATA = {
     scopeWork: $("scopeWork"), scopeAll: $("scopeAll"),
     weekNote: $("weekNote"), weekNoteText: $("weekNoteText"), weekNoteAct: $("weekNoteAct"),
     weekView: $("weekView"), weekEmptyBanner: $("weekEmptyBanner"),
-    noteAdjustList: $("noteAdjustList"), noteArrangeList: $("noteArrangeList")
+    noteAdjustList: $("noteAdjustList"), noteArrangeList: $("noteArrangeList"),
+    origEntry: $("origEntry")
   };
 
   /* ---------- 工具 ---------- */
@@ -1312,6 +1405,58 @@ window.SCHEDULE_DATA = {
     document.body.classList.remove("modal-open");
   }
 
+  /* ---------- 原始课程表（Excel 原表弹层） ---------- */
+  var ORIG_BAND_COLOR = { morning: "#0A84FF", afternoon: "#30D158", evening: "#AF52DE" };
+  var origModalCache = null;
+  function origModal() {
+    if (!origModalCache) {
+      origModalCache = {
+        mask: $("origModal"), close: $("origClose"), body: $("origBody")
+      };
+    }
+    return origModalCache;
+  }
+  function renderOrigSheet() {
+    var O = window.SCHEDULE_ORIG;
+    if (!O || !O.days) return;
+    var h = "";
+    for (var i = 0; i < O.days.length; i++) {
+      var d = O.days[i];
+      h += '<div class="os-day"><div class="os-day-head"><span class="os-day-name">' + escapeHtml(d.day) + "</span></div>";
+      for (var bi = 0; bi < (O.bandOrder || []).length; bi++) {
+        var key = O.bandOrder[bi], band = null, j;
+        for (j = 0; j < d.bands.length; j++) {
+          if (d.bands[j].key === key) { band = d.bands[j]; break; }
+        }
+        if (!band || !band.items || !band.items.length) continue;
+        h += '<div class="os-band">' +
+          '<div class="os-band-cap"><span class="os-band-dot" style="background:' + ORIG_BAND_COLOR[key] + '"></span>' +
+          "<b>" + escapeHtml(band.label) + "</b><i>" + escapeHtml(band.time || "") + "</i></div>";
+        for (var k = 0; k < band.items.length; k++) {
+          var it = band.items[k], meta = [];
+          if (it.nature) meta.push(it.nature);
+          if (it.teacher) meta.push(it.teacher);
+          if (it.location) meta.push(it.location);
+          h += '<div class="os-card"><div class="os-main"><div class="os-name">' + escapeHtml(it.name || "—") + "</div>";
+          if (meta.length) h += '<div class="os-meta">' + meta.map(escapeHtml).join(" · ") + "</div>";
+          h += "</div></div>";
+        }
+        h += "</div>";
+      }
+      h += "</div>";
+    }
+    origModal().body.innerHTML = h;
+  }
+  function openOrigModal() {
+    renderOrigSheet();
+    origModal().mask.classList.add("show");
+    document.body.classList.add("modal-open");
+  }
+  function closeOrigModal() {
+    origModal().mask.classList.remove("show");
+    document.body.classList.remove("modal-open");
+  }
+
   /* ---------- 渲染：备注 ---------- */
   function renderNotes() {
     var a = "";
@@ -1390,7 +1535,20 @@ window.SCHEDULE_DATA = {
         if (e.target === mm.mask) closeCourseModal();
       });
       document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") closeCourseModal();
+        if (e.key === "Escape") { closeCourseModal(); closeOrigModal(); }
+      });
+    })();
+
+    // 底部“原始课程表”入口 → 原表弹层
+    els.origEntry.addEventListener("click", openOrigModal);
+    (function () {
+      var om = origModal();
+      om.close.addEventListener("click", function (e) {
+        e.stopPropagation();
+        closeOrigModal();
+      });
+      om.mask.addEventListener("click", function (e) {
+        if (e.target === om.mask) closeOrigModal();
       });
     })();
 
