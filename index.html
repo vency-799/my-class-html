@@ -361,10 +361,6 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
-.day-head.is-today {
-  border-color: rgba(52, 199, 89, .55);
-  background: linear-gradient(180deg, rgba(0, 122, 255, .07), var(--color-surface));
-}
 .day-name { font-size: 12px; font-weight: 700; line-height: 1.2; color: var(--color-text); white-space: nowrap; }
 .day-date { font-size: 10px; line-height: 1.2; color: var(--color-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -402,10 +398,6 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   overflow: hidden;
 }
-.day-track.is-today {
-  border-color: rgba(52, 199, 89, .55);
-  box-shadow: inset 0 0 0 1px rgba(52, 199, 89, .25);
-}
 
 /* 空周末列弱化：极轻的灰面卡片 + 淡发丝边，安静不抢眼 */
 .day-head.weekend-muted .day-date { color: var(--color-text-tertiary); }
@@ -417,6 +409,19 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
   color: var(--color-text-tertiary);
   opacity: .6;
   font-weight: 500;
+}
+
+/* 今天：列身保持白色不动，只在表头点亮"周几 + 日期"。
+   放在 weekend-muted 之后，保证"今天是周末"时仍以今天样式为准。 */
+.day-head.is-today .day-name { color: var(--color-primary); }
+/* 日期做成实心小药丸，是这一列唯一的彩色元素 */
+.day-head.is-today .day-date {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 122, 255, .3);
 }
 
 /* 课程块：按 top%/height% 定位，高度对应课时占比 */
