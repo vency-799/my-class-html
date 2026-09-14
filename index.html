@@ -571,9 +571,11 @@ body.modal-open { overflow: hidden; }
   flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--color-text);
   line-height: 1.5; overflow-wrap: anywhere;
 }
-/* 变动备注：橙调提示块，仅命中变动的课时出现（无变动时整行 hidden） */
+/* 变动备注：橙调提示块，仅命中变动的课时出现（无变动时整行 hidden）。
+   左右 -12px 让色块向外溢、内边距再补回 12px——文字与上方「课程时间」等行严格对齐，
+   只有底色比正文宽一点（inset callout 的常见做法）。 */
 .cm-row--note {
-  margin-top: 10px;
+  margin: 10px -12px 0;
   padding: 11px 12px;
   border-top: none;
   background: rgba(255, 159, 10, .09);
