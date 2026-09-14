@@ -445,6 +445,12 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
 .course-block.morning::before   { background: var(--color-morning); }
 .course-block.afternoon::before { background: var(--color-afternoon); }
 .course-block.evening::before   { background: var(--color-evening); }
+/* 有变动的课（换教室/调时间）：右上角小橙点，提示"点开看备注" */
+.course-block.changed::after {
+  content: ""; position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-warn);
+}
 .cb-time {
   font-size: 9px; color: var(--color-text-tertiary); line-height: 1.1;
   font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -565,6 +571,16 @@ body.modal-open { overflow: hidden; }
   flex: 1; font-size: var(--text-sm); font-weight: 600; color: var(--color-text);
   line-height: 1.5; overflow-wrap: anywhere;
 }
+/* 变动备注：橙调提示块，仅命中变动的课时出现（无变动时整行 hidden） */
+.cm-row--note {
+  margin-top: 10px;
+  padding: 11px 12px;
+  border-top: none;
+  background: rgba(255, 159, 10, .09);
+  border-radius: var(--radius-sm);
+}
+.cm-row--note dt { color: var(--color-warn); font-weight: 700; }
+.cm-row--note dd { font-weight: 500; line-height: 1.6; }
 
 /* ============ 底部入口：原始课程表（与备注卡片同款） ============ */
 .sheet-entry { margin-top: 0; }
@@ -763,6 +779,7 @@ body.modal-open { overflow: hidden; }
       <div class="cm-row"><dt>课程时间</dt><dd id="cmTime"></dd></div>
       <div class="cm-row"><dt>任课老师</dt><dd id="cmTeacher"></dd></div>
       <div class="cm-row"><dt>上课地点</dt><dd id="cmLocation"></dd></div>
+      <div class="cm-row cm-row--note hidden" id="cmNoteRow"><dt>备注</dt><dd id="cmNote"></dd></div>
     </dl>
   </div>
 </div>
@@ -938,6 +955,21 @@ window.SCHEDULE_DATA = {
       }
     }
   ],
+
+  /* 课程变动（临时换教室 / 调时间）：按「具体日期 + 课程名」匹配，period 可选
+     （同一天同名课分时段时用来消歧）。命中时——课程块显示 to 的教室并挂小橙点，
+     课程弹窗多出一行「备注」。原教室照常写在 note 里留痕，方便对照。 */
+  "changes": [
+    {
+      "date": "2026-9-22",
+      "course": "人力资源管理",
+      "period": "afternoon",
+      "from": "文三栋407室",
+      "to": "文三栋506室",
+      "note": "原教室文三栋407室被学院活动占用，改到文三栋506室上课，上课时间不变"
+    }
+  ],
+
   "notes": {
     "adjust": [
       "中秋节：9月25日（周五）～9月27日（周日）放假，共3天，不调休",
@@ -1008,6 +1040,34 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
   };
   function makeupOf(d) {
     return MAKEUPS[d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()] || null;
+  }
+
+  // 课程变动：key 与 holidayOf / makeupOf 同格式（按具体日期）。
+  // 只在"这节课发生的那个真实日期"上生效，所以同一门课其它周次不受影响。
+  var CHANGES = D.changes || [];
+  function changeOf(d, courseName, periodId) {
+    var key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    for (var i = 0; i < CHANGES.length; i++) {
+      var c = CHANGES[i];
+      if (c.date !== key || c.course !== courseName) continue;
+      if (c.period && c.period !== periodId) continue;
+      return c;
+    }
+    return null;
+  }
+
+  // 把一条变动转成"调课说明"里的一行文案（与弹窗备注同源，改 changes 即可两处同步）：
+  // 9月22日（周二）下午 人力资源管理：原教室文三栋407室被学院活动占用…
+  function changeNoteLine(c) {
+    var p = c.date.split("-");
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    var wd = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][d.getDay()];
+    var label = "";
+    for (var i = 0; i < D.periods.length; i++) {
+      if (D.periods[i].id === c.period) { label = D.periods[i].name; break; }
+    }
+    return d.getMonth() + 1 + "月" + d.getDate() + "日（" + wd + "）" +
+      (label ? label + " " : "") + c.course + "：" + c.note;
   }
   // 按平日名取 D.days 索引（0=周一 … 6=周日）；找不到返回 -1
   function dayIndexByName(name) {
@@ -1328,17 +1388,21 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
           var top = pct(meta.start);
           var hgt = (meta.end - meta.start) / DAY_TOTAL * 100;
           courses.forEach(function (cr) {
-            track += '<div class="course-block ' + meta.className + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)"' +
+            // 该次课若有变动，显示调整后的教室，并把备注挂到块上供弹窗读取
+            var chg = changeOf(c.d, cr.name, p.id);
+            var loc = (chg && chg.to) ? chg.to : (cr.location || "");
+            track += '<div class="course-block ' + meta.className + (chg ? " changed" : "") + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)"' +
               ' data-name="' + escapeHtml(cr.name) + '"' +
               ' data-time="' + meta.time + '" data-slot="' + meta.label + '"' +
               ' data-teacher="' + escapeHtml(cr.teacher || "") + '"' +
-              ' data-location="' + escapeHtml(cr.location || "") + '"' +
+              ' data-location="' + escapeHtml(loc) + '"' +
+              ' data-note="' + escapeHtml(chg ? chg.note : "") + '"' +
               ' data-week="' + c.day.name + '" data-date="' + fmtDate(c.d) + '"' +
               ' data-mk="' + escapeHtml(c.mk ? c.mk.borrow : "") + '">';
             track += '<div class="cb-time">' + meta.time + "</div>";
             track += '<div class="cb-name">' + escapeHtml(cr.name) + "</div>";
             if (cr.teacher) track += '<div class="cb-teacher">' + escapeHtml(cr.teacher) + "</div>";
-            if (cr.location) track += '<div class="cb-location">' + escapeHtml(cr.location) + "</div>";
+            if (loc) track += '<div class="cb-location">' + escapeHtml(loc) + "</div>";
             track += "</div>";
           });
         });
@@ -1395,7 +1459,8 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
       courseModalCache = {
         mask: $("courseModal"), close: $("courseModalClose"),
         meta: $("cmMeta"), mk: $("cmMk"), name: $("cmName"),
-        time: $("cmTime"), teacher: $("cmTeacher"), location: $("cmLocation")
+        time: $("cmTime"), teacher: $("cmTeacher"), location: $("cmLocation"),
+        noteRow: $("cmNoteRow"), note: $("cmNote")
       };
     }
     return courseModalCache;
@@ -1407,6 +1472,13 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
     m.teacher.textContent = d.teacher || "—";
     m.location.textContent = d.location || "—";
     m.meta.textContent = (d.week || "") + (d.date ? " · " + d.date : "");
+    // 备注：只有该次课确实有变动时才显示这一行
+    if (d.note) {
+      m.note.textContent = d.note;
+      m.noteRow.classList.remove("hidden");
+    } else {
+      m.noteRow.classList.add("hidden");
+    }
     if (d.mk) {
       m.mk.textContent = "调休 · 补 " + d.mk + " 的课";
       m.mk.classList.remove("hidden");
@@ -1471,6 +1543,8 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
   /* ---------- 渲染：备注 ---------- */
   function renderNotes() {
     var a = "";
+    // 课程变动自动生成，排在最前（最新、最容易被漏掉）
+    CHANGES.forEach(function (c) { a += '<li class="adjust">' + escapeHtml(changeNoteLine(c)) + "</li>"; });
     (D.notes.adjust || []).forEach(function (t) { a += '<li class="adjust">' + escapeHtml(t) + "</li>"; });
     els.noteAdjustList.innerHTML = a;
     var b = "";
