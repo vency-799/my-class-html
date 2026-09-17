@@ -445,12 +445,15 @@ main { padding: 4px 16px 40px; max-width: 1080px; margin: 0 auto; }
 .course-block.morning::before   { background: var(--color-morning); }
 .course-block.afternoon::before { background: var(--color-afternoon); }
 .course-block.evening::before   { background: var(--color-evening); }
-/* 有变动的课（换教室/调时间）：右上角小橙点，提示"点开看备注" */
+/* 有变动的课（换教室/调时间/停课）：右上角小橙点，提示"点开看备注" */
 .course-block.changed::after {
   content: ""; position: absolute; top: 4px; right: 4px;
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--color-warn);
 }
+/* 活动块（原课取消/调整后改参加的论坛、讲座等）：橙色左条 + 极淡橙面，一眼区分"这不是课" */
+.course-block.activity { background: rgba(255, 159, 10, .07); }
+.course-block.activity::before { background: var(--color-warn); }
 .cb-time {
   font-size: 9px; color: var(--color-text-tertiary); line-height: 1.1;
   font-variant-numeric: tabular-nums; white-space: nowrap;
@@ -958,10 +961,24 @@ window.SCHEDULE_DATA = {
     }
   ],
 
-  /* 课程变动（临时换教室 / 调时间）：按「具体日期 + 课程名」匹配，period 可选
-     （同一天同名课分时段时用来消歧）。命中时——课程块显示 to 的教室并挂小橙点，
-     课程弹窗多出一行「备注」。原教室照常写在 note 里留痕，方便对照。 */
+  /* 课程变动（临时换教室 / 调时间 / 停课改参加活动）：按「具体日期 + 课程名」匹配，
+     period 可选（同一天同名课分时段时用来消歧）。命中时课程块挂小橙点、弹窗多一行「备注」。
+       · to       调整后的教室（原教室照常写在 note 里留痕，方便对照）
+       · cancel   该次课取消；再配 replace 就在原时段改显示那块活动
+       · replace  { name, location, time } 替代这次课的活动（论坛 / 讲座等），显示为橙色活动块 */
   "changes": [
+    {
+      "date": "2026-9-22",
+      "course": "公司财务",
+      "period": "morning",
+      "cancel": true,
+      "replace": {
+        "name": "主论坛",
+        "location": "文二栋一楼国际学术报告厅",
+        "time": "8:50 开始"
+      },
+      "note": "本次课调整，请全体26级全日制MBA同学于 8:50 到文二栋一楼国际学术报告厅参加主论坛；后续是否补课由徐老师根据授课进度另行通知"
+    },
     {
       "date": "2026-9-22",
       "course": "人力资源管理",
@@ -1385,28 +1402,35 @@ window.ORIG_IMAGE = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABFUAAAKACAIAA
           var meta = periodMeta[p.id];
           var courses = (src.courses[p.id] || []).filter(function (cr) { return courseInWeek(cr, filterWeek); });
           if (courses.length === 0) return; // 该时段无课则不显示
-          dayHas = true;
-          anyCourse = true;
           var top = pct(meta.start);
           var hgt = (meta.end - meta.start) / DAY_TOTAL * 100;
+          var drawn = 0;   // 该时段真正画出来的块数（课被取消且无替代时可能是 0）
           courses.forEach(function (cr) {
             // 该次课若有变动，显示调整后的教室，并把备注挂到块上供弹窗读取
             var chg = changeOf(c.d, cr.name, p.id);
-            var loc = (chg && chg.to) ? chg.to : (cr.location || "");
-            track += '<div class="course-block ' + meta.className + (chg ? " changed" : "") + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)"' +
-              ' data-name="' + escapeHtml(cr.name) + '"' +
-              ' data-time="' + meta.time + '" data-slot="' + meta.label + '"' +
-              ' data-teacher="' + escapeHtml(cr.teacher || "") + '"' +
+            // 停课：有替代活动就当成"活动块"画出（橙色），没有就整块不显示
+            var act = (chg && chg.cancel) ? chg.replace : null;
+            if (chg && chg.cancel && !act) return;
+            var name = act ? act.name : cr.name;
+            var teacher = act ? (act.teacher || "") : (cr.teacher || "");
+            var loc = act ? (act.location || "") : ((chg && chg.to) ? chg.to : (cr.location || ""));
+            var timeText = (act && act.time) ? act.time : meta.time;
+            drawn++;
+            track += '<div class="course-block ' + meta.className + (act ? " activity" : "") + (chg ? " changed" : "") + '" style="top:calc(' + top.toFixed(3) + '% + 5px);height:calc(' + hgt.toFixed(3) + '% - 5px)"' +
+              ' data-name="' + escapeHtml(name) + '"' +
+              ' data-time="' + escapeHtml(timeText) + '" data-slot="' + meta.label + '"' +
+              ' data-teacher="' + escapeHtml(teacher) + '"' +
               ' data-location="' + escapeHtml(loc) + '"' +
               ' data-note="' + escapeHtml(chg ? chg.note : "") + '"' +
               ' data-week="' + c.day.name + '" data-date="' + fmtDate(c.d) + '"' +
               ' data-mk="' + escapeHtml(c.mk ? c.mk.borrow : "") + '">';
-            track += '<div class="cb-time">' + meta.time + "</div>";
-            track += '<div class="cb-name">' + escapeHtml(cr.name) + "</div>";
-            if (cr.teacher) track += '<div class="cb-teacher">' + escapeHtml(cr.teacher) + "</div>";
+            track += '<div class="cb-time">' + escapeHtml(timeText) + "</div>";
+            track += '<div class="cb-name">' + escapeHtml(name) + "</div>";
+            if (teacher) track += '<div class="cb-teacher">' + escapeHtml(teacher) + "</div>";
             if (loc) track += '<div class="cb-location">' + escapeHtml(loc) + "</div>";
             track += "</div>";
           });
+          if (drawn) { dayHas = true; anyCourse = true; }
         });
 
         if (!dayHas) {
